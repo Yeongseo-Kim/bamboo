@@ -1,0 +1,6 @@
+# 배포 시 업로드 제외 (민감 정보 방지)
+.env
+.env.*
+*.local
+.git
+.gitignore

@@ -1,10 +1,80 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // MVP: 읽기/쓰기 허용 (배포 전 보안 규칙 강화 권장)
-    // 추후: request.auth != null 또는 userId 검증 등 적용
-    match /{document=**} {
+
+    // ===== 헬퍼 =====
+    // 문자열 길이 제한 (게시글/댓글 300자)
+    function isValidContent(str) {
+      return str is string && str.size() >= 1 && str.size() <= 300;
+    }
+
+    // ===== posts =====
+    match /posts/{postId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['userId', 'content', 'nickname', 'createdAt', 'reportCount', 'isHidden'])
+                   && isValidContent(request.resource.data.content)
+                   && request.resource.data.userId is string
+                   && request.resource.data.nickname is string
+                   && request.resource.data.reportCount == 0
+                   && request.resource.data.isHidden == false;
+      // 신고 시 reportCount, isHidden만 업데이트 허용
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reportCount', 'isHidden']);
+      allow delete: if true;
+    }
+
+    // ===== comments =====
+    match /comments/{commentId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['postId', 'userId', 'content', 'createdAt', 'reportCount', 'isHidden'])
+                   && isValidContent(request.resource.data.content)
+                   && request.resource.data.postId is string
+                   && request.resource.data.userId is string
+                   && request.resource.data.reportCount == 0
+                   && request.resource.data.isHidden == false;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reportCount', 'isHidden']);
+      allow delete: if true;
+    }
+
+    // ===== hearts (공감) =====
+    match /hearts/{heartId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['userId'])
+                   && request.resource.data.userId is string
+                   && (request.resource.data.targetType == 'post' || request.resource.data.targetType == 'comment')
+                   && request.resource.data.targetId is string;
+      allow update: if false;
+      allow delete: if true;
+    }
+
+    // ===== reports (신고) - createReport에서 중복 체크/개수 확인용 조회 필요 =====
+    match /reports/{reportId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['targetType', 'targetId', 'userId', 'createdAt'])
+                   && (request.resource.data.targetType == 'post' || request.resource.data.targetType == 'comment')
+                   && request.resource.data.targetId is string
+                   && request.resource.data.userId is string;
+      allow update: if false;
+      allow delete: if true;
+    }
+
+    // ===== notifications =====
+    match /notifications/{notifId} {
+      allow read: if true;
+      allow create: if request.resource.data.keys().hasAll(['userId', 'type', 'targetId', 'postId', 'fromUserId', 'message', 'isRead', 'createdAt'])
+                   && request.resource.data.userId is string
+                   && request.resource.data.message is string;
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isRead']);
+      allow delete: if false;
+    }
+
+    // ===== notification_prefs (푸시 수신 설정) =====
+    match /notification_prefs/{userId} {
       allow read, write: if true;
+    }
+
+    // ===== user_keys (토스 userKey 매핑) - Cloud Function 전용, 클라이언트 접근 차단 =====
+    match /user_keys/{docId} {
+      allow read, write: if false;
     }
   }
 }
