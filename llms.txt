@@ -1,0 +1,49 @@
+# Bamboo - 토스 대나무숲 (앱인토스 React Native 미니앱)
+
+## 프로젝트 개요
+- 앱인토스(Apps in Toss) 플랫폼용 익명 게시판 React Native 미니앱
+- Granite 프레임워크 + @apps-in-toss/framework 기반
+- TDS(Toss Design System): @toss/tds-react-native 필수 사용
+- Firebase Firestore (Web SDK v12 모듈러 API) 백엔드
+- 스킴: intoss://bamboo-app
+
+## 핵심 기술 스택
+- React Native 0.72, React 18.2, TypeScript (strict)
+- Granite + Metro 번들러
+- @toss/tds-react-native (Button, Toast, ListRow, PageNavbar, TextArea, Txt, TextButton, List)
+- Firebase JS SDK v12 (모듈러 API, RN 전용 빌드 사용)
+- date-fns (한국어 로케일), Biome (lint/format)
+
+## 프로젝트 구조
+- src/pages/ → 파일 기반 라우팅 (createRoute 패턴)
+- src/api/ → Firestore CRUD (store.ts = 핵심 데이터 레이어)
+- src/components/ → PostCard, CommentItem, HeartButton
+- src/lib/ → firebase.ts (초기화), cleanBot.ts (필터링), nickname.ts
+- src/hooks/ → useToast
+- src/constants/ → PAGE_SIZE, MAX_CONTENT_LENGTH, ROUTES
+
+## 데이터 모델 (Firestore 컬렉션)
+- posts: 게시글 (userId, content, nickname, createdAt, reportCount, isHidden)
+- comments: 댓글 (postId, userId, content, createdAt, reportCount, isHidden)
+- hearts: 공감 (postId, userId) — 문서 ID = postId_userId
+- reports: 신고 (targetType, targetId, userId, createdAt)
+
+## 개발 명령어
+- npm run dev → 로컬 개발 서버 (port 8081)
+- npm run build → 번들 빌드
+- npm run typecheck → tsc --noEmit
+- npm run lint → biome check --write
+- npm test → jest
+
+## AI 개발 참고 문서 (Cursor/Gemini Docs 등록 권장)
+- 앱인토스 기본: https://developers-apps-in-toss.toss.im/llms.txt
+- 앱인토스 전체: https://developers-apps-in-toss.toss.im/llms-full.txt
+- TDS React Native: https://tossmini-docs.toss.im/tds-react-native/llms-full.txt
+- 예제 코드: https://developers-apps-in-toss.toss.im/tutorials/examples.md
+- Firebase 연동: https://developers-apps-in-toss.toss.im/firebase/intro.md
+
+## 개발 시 유의사항
+- UI는 반드시 TDS 컴포넌트 사용 (검수 승인 기준)
+- TDS 컴포넌트는 로컬 브라우저에서 동작하지 않음 → 샌드박스 앱에서만 테스트
+- Firestore 복합 쿼리는 인덱스 필수 (firestore.indexes.json 참고)
+- 환경 변수는 import.meta.env로 빌드 시점 주입 (plugin-env)

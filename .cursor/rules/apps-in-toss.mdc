@@ -1,0 +1,35 @@
+---
+description: 앱인토스 미니앱 개발 시 AI가 참고할 컨텍스트 및 규칙
+alwaysApply: true
+---
+
+# 앱인토스 개발 가이드
+
+## 프로젝트 구조
+- **Granite 프레임워크** 기반 React Native 프로젝트. `@apps-in-toss/framework` 패키지 사용.
+- 프로젝트 생성: `npm create granite-app` / `yarn create granite-app` / `pnpm create granite-app`
+- 설정: `npx ait init` 으로 `granite.config.ts` 생성 및 구성
+
+## UI – TDS (Toss Design System)
+- **모든 비게임 React Native 미니앱은 TDS 사용이 필수**이며, 검수 승인 기준에 포함됨.
+- 프레임워크 버전에 따른 패키지:
+  - `@apps-in-toss/framework` **< 1.0.0** → `@toss-design-system/react-native`
+  - `@apps-in-toss/framework` **>= 1.0.0** → `@toss/tds-react-native`
+- TDS 컴포넌트: Button, Dialog, Toast, List Row, Text Field, Navbar 등
+- TDS 문서: https://tossmini-docs.toss.im/tds-react-native/
+- **TDS 테스트**: 로컬 브라우저에서는 동작하지 않음. [샌드박스앱](https://developers-apps-in-toss.toss.im/development/test/sandbox.html)에서만 테스트 가능.
+
+## 라우팅
+- **파일 기반 라우팅** (Next.js와 유사): `pages/` 디렉터리 구조에 따라 경로 자동 생성.
+- 스킴: `intoss://<서비스명>/<경로>` (예: `intoss://my-app/detail`)
+- 페이지 정의: `createRoute()`, `Route.useNavigation()` 사용
+
+## AI 활용 – @docs
+- 정확한 API/SDK 사용이 필요할 때 **@docs** 로 문서를 우선 참고하도록 요청.
+- 예: `@docs 앱인토스 인앱광고 샘플 코드 작성해줘`
+- MCP 사용 시(`.cursor/mcp.json`에 `apps-in-toss` 설정): 앱인토스 문서·API를 AI가 자동 참조.
+
+## 참고 문서
+- AI 개발 가이드: https://developers-apps-in-toss.toss.im/development/llms.html
+- React Native 튜토리얼: https://developers-apps-in-toss.toss.im/tutorials/react-native.html
+- TDS React Native: https://tossmini-docs.toss.im/tds-react-native/

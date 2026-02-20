@@ -1,0 +1,10 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // MVP: 읽기/쓰기 허용 (배포 전 보안 규칙 강화 권장)
+    // 추후: request.auth != null 또는 userId 검증 등 적용
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}

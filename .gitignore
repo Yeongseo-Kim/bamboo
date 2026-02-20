@@ -1,0 +1,22 @@
+node_modules/
+dist/
+npm-debug.log
+
+.yarn/*
+.pnp.*
+yarn-error.log
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/sdks
+!.yarn/versions
+
+.env
+.granite
+
+# mTLS 인증서 (절대 커밋 금지)
+certs/
+*.key
+*.pem
+.swc
+.DS_Store

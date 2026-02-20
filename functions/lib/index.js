@@ -1,0 +1,171 @@
+"use strict";
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.registerUserKeyFromAuthCode = exports.onHeartCreated = exports.onCommentCreated = void 0;
+/**
+ * Firebase Cloud Functions - 토스 대나무숲
+ * 댓글/공감 시 앱인토스 스마트 발송 푸시 API 호출
+ */
+const admin = __importStar(require("firebase-admin"));
+const functions = __importStar(require("firebase-functions"));
+const sendPush_1 = require("./sendPush");
+admin.initializeApp();
+const db = admin.firestore();
+/**
+ * 댓글 생성 시 → 게시글 작성자에게 푸시 발송
+ */
+exports.onCommentCreated = functions.firestore
+    .document('comments/{commentId}')
+    .onCreate(async (snap, ctx) => {
+    const comment = snap.data();
+    const { postId, userId: commenterId } = comment;
+    const postSnap = await db.collection('posts').doc(postId).get();
+    if (!postSnap.exists)
+        return;
+    const post = postSnap.data();
+    const postAuthorId = post.userId;
+    // 본인 댓글 제외
+    if (postAuthorId === commenterId)
+        return;
+    await (0, sendPush_1.trySendPush)({
+        recipientUserId: postAuthorId,
+        postId,
+        type: 'comment',
+    });
+    // 참여자 알림 (해당 글에 댓글 단 다른 사람들)
+    const commentsSnap = await db
+        .collection('comments')
+        .where('postId', '==', postId)
+        .get();
+    const participantIds = new Set();
+    commentsSnap.docs.forEach((d) => {
+        const u = d.data().userId;
+        if (u !== commenterId && u !== postAuthorId)
+            participantIds.add(u);
+    });
+    for (const participantId of participantIds) {
+        await (0, sendPush_1.trySendPush)({
+            recipientUserId: participantId,
+            postId,
+            type: 'comment',
+        });
+    }
+});
+/**
+ * 공감(하트) 생성 시 → 글/댓글 작성자에게 푸시 발송
+ */
+exports.onHeartCreated = functions.firestore
+    .document('hearts/{heartId}')
+    .onCreate(async (snap, ctx) => {
+    const heart = snap.data();
+    const { targetType, targetId, userId: likerId } = heart;
+    if (!targetType || !targetId)
+        return;
+    let ownerId;
+    let postId;
+    if (targetType === 'post') {
+        const postSnap = await db.collection('posts').doc(targetId).get();
+        if (!postSnap.exists)
+            return;
+        const post = postSnap.data();
+        ownerId = post.userId;
+        postId = targetId;
+    }
+    else if (targetType === 'comment') {
+        const commentSnap = await db.collection('comments').doc(targetId).get();
+        if (!commentSnap.exists)
+            return;
+        const comment = commentSnap.data();
+        ownerId = comment.userId;
+        postId = comment.postId;
+    }
+    else {
+        return;
+    }
+    if (ownerId === likerId)
+        return;
+    await (0, sendPush_1.trySendPush)({
+        recipientUserId: ownerId,
+        postId,
+        type: 'heart',
+    });
+});
+/**
+ * 토스 로그인 인가코드로 userKey 등록 (앱에서 호출)
+ * - appLogin() → authorizationCode + referrer 전달
+ * - 서버에서 토큰 교환 → login-me → userKey 저장
+ *
+ * 사용 전 필수:
+ * 1. 앱인토스 콘솔에서 토스 로그인 연동 완료 (cert.support@toss.im)
+ * 2. mTLS 인증서 발급 후 certs/ 폴더에 배치
+ */
+exports.registerUserKeyFromAuthCode = functions.https.onCall(async (data) => {
+    var _a, _b, _c, _d;
+    const { mtlsFetch } = await Promise.resolve().then(() => __importStar(require('./appsInTossClient')));
+    const { authorizationCode, referrer, userId } = data;
+    if (!authorizationCode || !userId) {
+        throw new functions.https.HttpsError('invalid-argument', 'authorizationCode, userId 필수');
+    }
+    // 1. 토큰 발급 (mTLS)
+    const tokenRes = await mtlsFetch('/api-partner/v1/apps-in-toss/user/oauth2/generate-token', {
+        method: 'POST',
+        body: JSON.stringify({
+            authorizationCode,
+            referrer: referrer || 'DEFAULT',
+        }),
+    });
+    const tokenData = tokenRes.data;
+    if (tokenData.resultType !== 'SUCCESS' || !((_a = tokenData.success) === null || _a === void 0 ? void 0 : _a.accessToken)) {
+        throw new functions.https.HttpsError('internal', ((_b = tokenData.error) === null || _b === void 0 ? void 0 : _b.reason) || '토큰 발급 실패');
+    }
+    const accessToken = tokenData.success.accessToken;
+    // 2. 사용자 정보 조회 (userKey)
+    const meRes = await mtlsFetch('/api-partner/v1/apps-in-toss/user/oauth2/login-me', {
+        method: 'GET',
+        headers: { Authorization: `Bearer ${accessToken}` },
+    });
+    const meData = meRes.data;
+    if (meData.resultType !== 'SUCCESS' || ((_c = meData.success) === null || _c === void 0 ? void 0 : _c.userKey) == null) {
+        throw new functions.https.HttpsError('internal', ((_d = meData.error) === null || _d === void 0 ? void 0 : _d.reason) || '사용자 정보 조회 실패');
+    }
+    const tossUserKey = String(meData.success.userKey);
+    // 3. user_keys에 저장
+    await db.collection('user_keys').doc(userId).set({
+        tossUserKey,
+        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    }, { merge: true });
+    return { success: true };
+});
+//# sourceMappingURL=index.js.map
