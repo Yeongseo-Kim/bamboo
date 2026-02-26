@@ -1,5 +1,5 @@
 import { createRoute } from '@granite-js/react-native';
-import { Button, PageNavbar, TextArea, Toast } from '@toss/tds-react-native';
+import { Button, TextArea, Toast } from '@toss/tds-react-native';
 import React, { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { getUserId } from '../api/client';
@@ -48,9 +48,6 @@ function Page() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <PageNavbar>
-        <PageNavbar.Title>글쓰기</PageNavbar.Title>
-      </PageNavbar>
       <View style={styles.content}>
         <TextArea
           placeholder="하고 싶은 말을 적어 보세요. (가입 없이 익명으로 올려요)"
@@ -84,8 +81,8 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
-    paddingHorizontal: 20,
-    paddingTop: 20,
+    paddingHorizontal: 16,
+    paddingTop: 16,
     paddingBottom: 24,
   },
   textArea: {

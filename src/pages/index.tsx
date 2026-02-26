@@ -1,14 +1,11 @@
-import { useFocusEffect } from '@granite-js/native/@react-navigation/native';
 import { createRoute } from '@granite-js/react-native';
 import {
-  FixedBottomCTA,
-  FixedBottomCTAProvider,
+  Button,
   ListFooter,
-  PageNavbar,
   Toast,
   Txt,
 } from '@toss/tds-react-native';
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { getUserId } from '../api/client';
 import { hasHeart, toggleHeart } from '../api/hearts';
@@ -56,11 +53,9 @@ function Page() {
     [userId],
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      loadPosts();
-    }, [loadPosts]),
-  );
+  useEffect(() => {
+    loadPosts();
+  }, [loadPosts]);
 
   const handleHeartPress = useCallback(
     async (post: Post) => {
@@ -114,19 +109,8 @@ function Page() {
   }, [userId, refreshing]);
 
   return (
-    <FixedBottomCTAProvider wrapper={View} wrapperProps={{ style: { flex: 1 } }}>
-      <View style={[styles.container, { backgroundColor: theme.background }]}>
-        <PageNavbar>
-          <PageNavbar.Title>대나무숲</PageNavbar.Title>
-          <PageNavbar.AccessoryButtons>
-            <PageNavbar.AccessoryIconButton
-              name="icon-alarm-mono"
-              accessibilityLabel="알림"
-              onPress={() => navigation.navigate(ROUTES.NOTIFICATIONS)}
-            />
-          </PageNavbar.AccessoryButtons>
-        </PageNavbar>
-        <FlatList
+    <View style={[styles.container, { backgroundColor: theme.background }]}>
+      <FlatList
         data={posts}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
@@ -182,22 +166,32 @@ function Page() {
           ) : null
         }
       />
-      <FixedBottomCTA
-        type="primary"
-        style="fill"
-        onPress={() => navigation.navigate(ROUTES.WRITE)}
-      >
-        글쓰기
-      </FixedBottomCTA>
+      <View style={styles.ctaWrapper}>
+        <Button
+          type="primary"
+          size="big"
+          display="full"
+          onPress={() => navigation.navigate(ROUTES.WRITE)}
+        >
+          글쓰기
+        </Button>
+      </View>
       <Toast open={toast.open} text={toast.text} onClose={closeToast} />
     </View>
-    </FixedBottomCTAProvider>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  ctaWrapper: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: 16,
+    paddingBottom: 24,
   },
   listContent: {
     paddingHorizontal: 16,

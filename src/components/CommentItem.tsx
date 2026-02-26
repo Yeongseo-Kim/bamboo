@@ -80,23 +80,22 @@ export function CommentItem({
 const styles = StyleSheet.create({
   content: {
     flex: 1,
-    paddingVertical: 4,
+    paddingVertical: 6,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginBottom: 4,
+    marginBottom: 6,
   },
   body: {
-    marginBottom: 6,
+    marginBottom: 10,
     lineHeight: 22,
   },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginTop: 4,
   },
   heartRow: {
     flexDirection: 'row',

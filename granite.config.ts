@@ -110,9 +110,13 @@ export default defineConfig({
       brand: {
         displayName: '대나무숲',
         primaryColor: '#3182F6',
-        icon: '', // 화면에 노출될 앱의 아이콘 이미지 주소로 바꿔주세요. (비워두면 테스트 가능)
+        icon: 'https://static.toss.im/appsintoss/22627/6c776e21-a54a-4bff-b786-1e38fda2b5a2.png',
       },
       permissions: [],
+      navigationBar: {
+        withBackButton: true,
+        withHomeButton: true,
+      },
     }),
     env({
       VITE_FIREBASE_API_KEY: process.env.FIREBASE_API_KEY ?? '',

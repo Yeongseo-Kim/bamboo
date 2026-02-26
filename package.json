@@ -4,7 +4,12 @@
   "scripts": {
     "dev": "granite dev",
     "android:connect": "$HOME/Library/Android/sdk/platform-tools/adb reverse tcp:8081 tcp:8081 && $HOME/Library/Android/sdk/platform-tools/adb reverse tcp:5173 tcp:5173",
+    "android:open": "adb shell am start -a android.intent.action.VIEW -d \"intoss://bamboo-app\"",
+    "android:devices": "adb devices -l",
     "build": "granite build",
+    "debug:android": "bash scripts/debug-android.sh",
+    "debug:android:logs": "bash scripts/debug-android-logs.sh",
+    "debug:android:errors": "bash scripts/debug-android-errors.sh",
     "test": "jest --passWithNoTests",
     "test:checklist": "jest --testPathPattern=release-checklist --passWithNoTests",
     "checklist:bundle": "npm run build && npm run test:checklist",

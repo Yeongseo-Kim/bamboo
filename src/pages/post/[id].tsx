@@ -1,8 +1,9 @@
+import { useOverlay } from '@apps-in-toss/framework';
 import { createRoute } from '@granite-js/react-native';
 import {
   Button,
+  ConfirmDialog,
   List,
-  PageNavbar,
   TextArea,
   TextButton,
   Toast,
@@ -44,6 +45,7 @@ export const Route = createRoute('/post/:id', {
 function Page() {
   const { id } = Route.useParams();
   const navigation = Route.useNavigation();
+  const overlay = useOverlay();
   const userId = getUserId();
 
   const [post, setPost] = useState<Post | null>(null);
@@ -135,12 +137,51 @@ function Page() {
 
   const handleDeletePost = useCallback(async () => {
     if (!post) return;
-    const ok = await deletePost(post.id, userId);
-    if (ok) {
-      showToast('글이 삭제되었어요.');
-      navigation.goBack();
+    const confirmed = await new Promise<boolean>((resolve) => {
+      overlay.open(({ isOpen, close, exit }) => (
+        <ConfirmDialog
+          open={isOpen}
+          title="글 삭제"
+          description="정말로 삭제하시겠어요?"
+          leftButton={
+            <ConfirmDialog.Button
+              style="weak"
+              type="dark"
+              onPress={() => {
+                resolve(false);
+                close();
+              }}
+            >
+              취소
+            </ConfirmDialog.Button>
+          }
+          rightButton={
+            <ConfirmDialog.Button
+              type="danger"
+              onPress={() => {
+                resolve(true);
+                close();
+              }}
+            >
+              삭제
+            </ConfirmDialog.Button>
+          }
+          onClose={() => {
+            resolve(false);
+            close();
+          }}
+          onExited={exit}
+        />
+      ));
+    });
+    if (confirmed) {
+      const ok = await deletePost(post.id, userId);
+      if (ok) {
+        showToast('글이 삭제되었어요.');
+        navigation.goBack();
+      }
     }
-  }, [post, userId, navigation, showToast]);
+  }, [post, userId, navigation, showToast, overlay]);
 
   const handleSubmitComment = useCallback(async () => {
     const trimmed = commentText.trim();
@@ -161,13 +202,52 @@ function Page() {
 
   const handleDeleteComment = useCallback(
     async (commentId: string) => {
-      const ok = await deleteComment(commentId, userId);
-      if (ok) {
-        setComments((prev) => prev.filter((c) => c.id !== commentId));
-        showToast('댓글이 삭제되었어요.');
+      const confirmed = await new Promise<boolean>((resolve) => {
+        overlay.open(({ isOpen, close, exit }) => (
+          <ConfirmDialog
+            open={isOpen}
+            title="댓글 삭제"
+            description="정말로 삭제하시겠어요?"
+            leftButton={
+              <ConfirmDialog.Button
+                style="weak"
+                type="dark"
+                onPress={() => {
+                  resolve(false);
+                  close();
+                }}
+              >
+                취소
+              </ConfirmDialog.Button>
+            }
+            rightButton={
+              <ConfirmDialog.Button
+                type="danger"
+                onPress={() => {
+                  resolve(true);
+                  close();
+                }}
+              >
+                삭제
+              </ConfirmDialog.Button>
+            }
+            onClose={() => {
+              resolve(false);
+              close();
+            }}
+            onExited={exit}
+          />
+        ));
+      });
+      if (confirmed) {
+        const ok = await deleteComment(commentId, userId);
+        if (ok) {
+          setComments((prev) => prev.filter((c) => c.id !== commentId));
+          showToast('댓글이 삭제되었어요.');
+        }
       }
     },
-    [userId, showToast],
+    [userId, showToast, overlay],
   );
 
   const handleReportPost = useCallback(async () => {
@@ -187,9 +267,6 @@ function Page() {
   if (loading || !post) {
     return (
       <View style={[styles.container, { backgroundColor: theme.background }]}>
-        <PageNavbar>
-          <PageNavbar.Title>상세</PageNavbar.Title>
-        </PageNavbar>
         <View style={styles.center}>
           <Txt typography="t5" color={theme.textSecondary}>
             {loading ? '불러오는 중...' : '글을 찾을 수 없어요.'}
@@ -203,9 +280,6 @@ function Page() {
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <PageNavbar>
-        <PageNavbar.Title>상세</PageNavbar.Title>
-      </PageNavbar>
       <FlatList
         data={comments}
         keyExtractor={(item) => item.id}
@@ -311,7 +385,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   listContent: {
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
   },
   center: {
     flex: 1,
@@ -345,8 +419,8 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   commentInput: {
-    paddingVertical: 20,
-    paddingHorizontal: 20,
+    paddingVertical: 16,
+    paddingHorizontal: 16,
     flexDirection: 'column',
     gap: 12,
   },

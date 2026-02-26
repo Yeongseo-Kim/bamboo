@@ -1,0 +1,48 @@
+---
+description: Metro 서버 + Android 실기기 연결을 한 번에 처리하는 워크플로우
+alwaysApply: true
+---
+
+# Metro + Android 연결 (한 번에 처리)
+
+사용자가 "Metro 연결해줘", "안드로이드 연결해줘", "케이블 연결했어" 등 Metro/Android 연결을 요청하면 **아래 순서대로 터미널 명령을 실행**한다.
+
+## 1. 기존 Metro 프로세스 정리 (포트 충돌 방지)
+
+```bash
+lsof -ti :8081 -ti :8097 -ti :8098 2>/dev/null | xargs kill -9 2>/dev/null; echo "done"
+```
+
+## 2. Android adb reverse (실기기 연결)
+
+**기기 1대만 연결된 경우:**
+```bash
+adb reverse tcp:8081 tcp:8081 && adb reverse tcp:5173 tcp:5173 && adb reverse --list
+```
+
+**기기 2대 이상 연결된 경우** (에뮬레이터 + 실기기 등):
+- `adb devices -l` 로 실기기 ID 확인 (예: `R3CY50DV03T`)
+- 실기기에 `-s <기기ID>` 지정:
+```bash
+adb -s R3CY50DV03T reverse tcp:8081 tcp:8081 && adb -s R3CY50DV03T reverse tcp:5173 tcp:5173 && adb -s R3CY50DV03T reverse --list
+```
+
+## 3. Metro 서버 실행
+
+```bash
+cd /Users/eldrac/Desktop/bamboo && npm run dev
+```
+→ **백그라운드**로 실행 (`is_background: true`)
+
+## 4. 사용자에게 안내
+
+- 샌드박스 앱에서 `intoss://bamboo-app` 입력 후 실행
+- `Bundling ...%` 표시되면 연결 성공
+
+## 요약
+
+| 기기 | 선 필요 | 추가 설정 |
+|------|---------|-----------|
+| iPhone 시뮬레이터 | ❌ | 없음 |
+| iPhone 실기기 | ❌ | 같은 Wi‑Fi + IP 입력 |
+| Android 실기기 | ✅ USB | adb reverse 필수 |

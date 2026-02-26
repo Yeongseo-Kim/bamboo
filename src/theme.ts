@@ -21,6 +21,6 @@ export const theme = {
   heartInactive: '#B0BEC5',
   /** 빈 상태 서브 텍스트 */
   emptyMuted: '#94A3B8',
-  /** 버튼/링크 - 토스 블루 계열 유지 */
-  primary: undefined as string | undefined, // TDS 기본값 사용
+  /** 버튼/링크 - 토스 블루 */
+  primary: '#3182F6',
 } as const;

@@ -1,15 +1,9 @@
 import { createRoute } from '@granite-js/react-native';
-import {
-  List,
-  ListRow,
-  PageNavbar,
-  Switch,
-  Txt,
-  Toast,
-} from '@toss/tds-react-native';
+import { List, ListRow, Switch, Txt, Toast } from '@toss/tds-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { getUserId } from '../api/client';
+import { useToast } from '../hooks/useToast';
 import {
   getNotificationPrefs,
   setNotificationPrefs,
@@ -22,8 +16,8 @@ export const Route = createRoute('/settings', {
 });
 
 function Page() {
-  const navigation = Route.useNavigation();
   const userId = getUserId();
+  const { toast, showToast, closeToast } = useToast();
   const [pushEnabled, setPushEnabled] = useState(true);
   const [loading, setLoading] = useState(true);
 
@@ -43,28 +37,15 @@ function Page() {
       if (value) {
         const result = await registerUserKeyForPush();
         if (!result.success && result.error) {
-          Toast.show({
-            type: 'info',
-            message: '푸시 수신을 위해 토스 계정 연결이 필요해요.',
-          });
+          showToast('푸시 수신을 위해 토스 계정 연결이 필요해요.');
         }
       }
     },
-    [userId],
+    [userId, showToast],
   );
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
-      <PageNavbar>
-        <PageNavbar.Title>설정</PageNavbar.Title>
-        <PageNavbar.AccessoryButtons>
-          <PageNavbar.AccessoryTextButton
-            onPress={() => navigation.goBack()}
-          >
-            닫기
-          </PageNavbar.AccessoryTextButton>
-        </PageNavbar.AccessoryButtons>
-      </PageNavbar>
       <View style={styles.content}>
         <Txt typography="t6" color={theme.textSecondary} style={styles.section}>
           알림
@@ -95,6 +76,7 @@ function Page() {
           토스 알림 수신에 동의한 경우에만 푸시를 받을 수 있어요.
         </Txt>
       </View>
+      <Toast open={toast.open} text={toast.text} onClose={closeToast} />
     </View>
   );
 }

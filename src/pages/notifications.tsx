@@ -1,10 +1,5 @@
 import { createRoute } from '@granite-js/react-native';
-import {
-  List,
-  ListRow,
-  PageNavbar,
-  Txt,
-} from '@toss/tds-react-native';
+import { List, ListRow, Txt } from '@toss/tds-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { getUserId } from '../api/client';
@@ -70,16 +65,6 @@ function Page() {
 
     return (
         <View style={[styles.container, { backgroundColor: theme.background }]}>
-            <PageNavbar>
-                <PageNavbar.Title>알림</PageNavbar.Title>
-                <PageNavbar.AccessoryButtons>
-                    <PageNavbar.AccessoryTextButton
-                        onPress={() => navigation.navigate(ROUTES.SETTINGS)}
-                    >
-                        설정
-                    </PageNavbar.AccessoryTextButton>
-                </PageNavbar.AccessoryButtons>
-            </PageNavbar>
             <View style={styles.settingsRow}>
                 <List>
                     <ListRow
