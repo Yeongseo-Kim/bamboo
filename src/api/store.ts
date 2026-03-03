@@ -48,6 +48,7 @@ function toPost(
     nickname: data.nickname as string,
     createdAt: toMillis(data.createdAt),
     heartCount,
+    commentCount: (data.commentCount as number) ?? 0,
     reportCount: (data.reportCount as number) ?? 0,
     isHidden: (data.isHidden as boolean) ?? false,
   };
@@ -177,6 +178,7 @@ export async function createPost(
     nickname,
     createdAt: Date.now(),
     heartCount: 0,
+    commentCount: 0,
     reportCount: 0,
     isHidden: false,
   });
@@ -188,6 +190,7 @@ export async function createPost(
     nickname,
     createdAt: Date.now(),
     heartCount: 0,
+    commentCount: 0,
     reportCount: 0,
     isHidden: false,
   };
@@ -325,6 +328,9 @@ export async function createComment(
     });
   }
 
+  // post의 commentCount 증가
+  await updateDoc(doc(db, POSTS_COL, postId), { commentCount: increment(1) });
+
   const snap = await getDoc(docRef);
   return toComment(docRef.id, snap.data() ?? {}, 0);
 }
@@ -339,7 +345,11 @@ export async function deleteComment(
   const comment = snap.data();
   if (comment.userId !== userId) return false;
 
+  const postId = comment.postId as string;
   await deleteDoc(commentRef);
+
+  // post의 commentCount 감소
+  await updateDoc(doc(db, POSTS_COL, postId), { commentCount: increment(-1) });
 
   const reportsSnap = await getDocs(
     query(

@@ -1,4 +1,5 @@
 import { ListRow, Txt } from '@toss/tds-react-native';
+import { Path, Svg } from '@granite-js/native/react-native-svg';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import React from 'react';
@@ -54,6 +55,19 @@ export function PostCard({
                 onPress={onHeartPress}
                 count={post.heartCount}
               />
+              <View style={styles.commentCount}>
+                <Svg width={14} height={14} viewBox="0 0 24 24" fill="none">
+                  <Path
+                    d="M12 2C6.48 2 2 6.03 2 11c0 2.7 1.24 5.12 3.2 6.8L4 21l4.2-1.4C9.37 20.17 10.66 20.4 12 20.4c5.52 0 10-4.03 10-9.2S17.52 2 12 2z"
+                    stroke={theme.textTertiary}
+                    strokeWidth={1.8}
+                    strokeLinejoin="round"
+                  />
+                </Svg>
+                <Txt typography="t7" color={theme.textTertiary}>
+                  {post.commentCount ?? 0}
+                </Txt>
+              </View>
             </View>
             {isOwner && (
               <Txt typography="t7" color={theme.textTertiary}>
@@ -93,5 +107,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+  },
+  commentCount: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    marginLeft: 8,
   },
 });

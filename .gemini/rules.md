@@ -31,6 +31,11 @@
 - TDS 컴포넌트는 **로컬 브라우저에서 동작하지 않음** → 반드시 샌드박스 앱에서 테스트
 - `Txt` 컴포넌트: typography props (`t1`~`t7`), color, fontWeight 지원
 - `PageNavbar`: 화면 상단 내비게이션 바 (Title, AccessoryButtons 등)
+- `Icon`: TDS 아이콘 컴포넌트 — `name`, `size`, `color` props 사용
+  - 아웃라인(선만): `heart-line`, `chat-line` 등 `-line` suffix
+  - 채워진 형태: `heart`, `chat` 등 suffix 없음
+  - **이모지/유니코드 문자 직접 사용 금지** → 반드시 `Icon` 컴포넌트 사용
+- `Asset.Icon`: 프레임과 함께 아이콘을 표시할 때 사용 (`name` prop)
 - 커스텀 스타일은 `StyleSheet.create()` 사용
 
 ### 환경 변수
@@ -62,3 +67,11 @@
 - TDS React Native: https://tossmini-docs.toss.im/tds-react-native/llms-full.txt
 - 예제 코드: https://developers-apps-in-toss.toss.im/tutorials/examples.md
 - Firebase 연동: https://developers-apps-in-toss.toss.im/firebase/intro.md
+
+## 디자인 가이드
+- 토스 디자인 시스템 개요: https://developers-apps-in-toss.toss.im/design/overview.html
+- TDS 컴포넌트 목록: https://developers-apps-in-toss.toss.im/design/components.html
+- TDS Mobile 문서: https://tossmini-docs.toss.im/tds-mobile/components/Asset/check-first/
+- UX 라이팅 가이드: https://developers-apps-in-toss.toss.im/design/ux-writing.html
+- 접근성 가이드: https://frontend-fundamentals.com/a11y/
+- 핵심 TDS 컴포넌트: Badge, Border, BottomCTA, Button, Asset, ListRow, ListHeader, Navigation, Paragraph, Tab, Top
