@@ -8,6 +8,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  increment,
   limit,
   orderBy,
   query,
@@ -110,7 +111,10 @@ async function getHeartCountForPost(postId: string): Promise<number> {
   const snap2 = await getDocs(q2);
 
   // 중복 제거 (ID 기준)
-  const ids = new Set([...snap1.docs.map((d) => d.id), ...snap2.docs.map((d) => d.id)]);
+  const ids = new Set([
+    ...snap1.docs.map((d) => d.id),
+    ...snap2.docs.map((d) => d.id),
+  ]);
   return ids.size;
 }
 
@@ -140,14 +144,12 @@ export async function getPosts(
   }
 
   const snap = await getDocs(q);
-  const results: Post[] = [];
 
-  for (const document of snap.docs) {
-    const d = document.data();
-    if (d.isHidden) continue;
-    const heartCount = await getHeartCountForPost(document.id);
-    results.push(toPost(document.id, d, heartCount));
-  }
+  const visibleDocs = snap.docs.filter((d) => !d.data().isHidden);
+  const results: Post[] = visibleDocs.map((d) => {
+    const data = d.data() as Record<string, unknown>;
+    return toPost(d.id, data, (data.heartCount as number) ?? 0);
+  });
 
   return results;
 }
@@ -158,8 +160,7 @@ export async function getPost(id: string): Promise<Post | null> {
   if (!snap.exists()) return null;
   const d = snap.data();
   if (d.isHidden) return null;
-  const heartCount = await getHeartCountForPost(id);
-  return toPost(id, d, heartCount);
+  return toPost(id, d, (d.heartCount as number) ?? 0);
 }
 
 export async function createPost(
@@ -175,6 +176,7 @@ export async function createPost(
     content: content.trim(),
     nickname,
     createdAt: Date.now(),
+    heartCount: 0,
     reportCount: 0,
     isHidden: false,
   });
@@ -255,13 +257,12 @@ export async function getComments(postId: string): Promise<Comment[]> {
     orderBy('createdAt', 'asc'),
   );
   const snap = await getDocs(q);
-  const results: Comment[] = [];
 
-  for (const document of snap.docs) {
-    const d = document.data();
-    const heartCount = await getHeartCountForTarget('comment', document.id);
-    results.push(toComment(document.id, d, heartCount));
-  }
+  const commentDocs = snap.docs;
+  const results: Comment[] = commentDocs.map((d) => {
+    const data = d.data() as Record<string, unknown>;
+    return toComment(d.id, data, (data.heartCount as number) ?? 0);
+  });
   return results;
 }
 
@@ -278,6 +279,7 @@ export async function createComment(
     userId,
     content: content.trim(),
     createdAt: Date.now(),
+    heartCount: 0,
     reportCount: 0,
     isHidden: false,
   });
@@ -396,7 +398,7 @@ export async function toggleHeart(
   // comment: 신규 `${targetType}_${targetId}_${userId}`
   // 통일성을 위해 post도 신규 규칙을 따르되, 기존 데이터와의 호환성을 위해 Legacy ID도 체크/삭제 해야 함.
 
-  let heartId = `${targetType}_${targetId}_${userId}`;
+  const heartId = `${targetType}_${targetId}_${userId}`;
 
   // Post인 경우 기존 ID 우선 체크
   if (targetType === 'post') {
@@ -404,7 +406,10 @@ export async function toggleHeart(
     const heartRefLegacy = doc(db, HEARTS_COL, heartIdLegacy);
     const snapLegacy = await getDoc(heartRefLegacy);
     if (snapLegacy.exists()) {
-      await deleteDoc(heartRefLegacy);
+      await Promise.all([
+        deleteDoc(heartRefLegacy),
+        updateDoc(doc(db, POSTS_COL, targetId), { heartCount: increment(-1) }),
+      ]);
       return false;
     }
     // Legacy가 없으면 신규 ID 사용 (아래 로직)
@@ -414,17 +419,25 @@ export async function toggleHeart(
   const snap = await getDoc(heartRef);
 
   if (snap.exists()) {
-    await deleteDoc(heartRef);
+    const targetCol = targetType === 'post' ? POSTS_COL : COMMENTS_COL;
+    await Promise.all([
+      deleteDoc(heartRef),
+      updateDoc(doc(db, targetCol, targetId), { heartCount: increment(-1) }),
+    ]);
     return false;
   }
 
-  await setDoc(heartRef, {
-    targetType,
-    targetId,
-    userId,
-    // 하위 호환성을 위해 post인 경우 postId 필드도 추가해줌 (선택사항이나 안전을 위해)
-    ...(targetType === 'post' ? { postId: targetId } : {}),
-  });
+  const targetCol = targetType === 'post' ? POSTS_COL : COMMENTS_COL;
+  await Promise.all([
+    setDoc(heartRef, {
+      targetType,
+      targetId,
+      userId,
+      // 하위 호환성을 위해 post인 경우 postId 필드도 추가해줌 (선택사항이나 안전을 위해)
+      ...(targetType === 'post' ? { postId: targetId } : {}),
+    }),
+    updateDoc(doc(db, targetCol, targetId), { heartCount: increment(1) }),
+  ]);
 
   // 알림 생성
   if (targetType === 'post' && postOwnerId && postOwnerId !== userId) {
@@ -458,7 +471,9 @@ export async function toggleHeart(
 // Notification API
 import type { Notification } from './types';
 
-export async function getNotifications(userId: string): Promise<Notification[]> {
+export async function getNotifications(
+  userId: string,
+): Promise<Notification[]> {
   const q = query(
     collection(db, NOTIFICATIONS_COL),
     where('userId', '==', userId),
@@ -482,7 +497,9 @@ export async function getNotifications(userId: string): Promise<Notification[]> 
   });
 }
 
-export async function markNotificationRead(notificationId: string): Promise<void> {
+export async function markNotificationRead(
+  notificationId: string,
+): Promise<void> {
   const ref = doc(db, NOTIFICATIONS_COL, notificationId);
   await updateDoc(ref, { isRead: true });
 }

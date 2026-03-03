@@ -53,7 +53,9 @@ function Page() {
   const [commentText, setCommentText] = useState('');
   const [hearted, setHearted] = useState(false);
   const [heartCount, setHeartCount] = useState(0);
-  const [commentHeartMap, setCommentHeartMap] = useState<Record<string, boolean>>({});
+  const [commentHeartMap, setCommentHeartMap] = useState<
+    Record<string, boolean>
+  >({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const { toast, showToast, closeToast } = useToast();
@@ -73,11 +75,14 @@ function Page() {
       setHearted(heart);
       setHeartCount(count);
 
-      // Fetch comment hearts
+      // Fetch comment hearts in parallel
+      const heartResults = await Promise.all(
+        commentList.map((c) => checkHasHeart('comment', c.id, userId)),
+      );
       const map: Record<string, boolean> = {};
-      for (const c of commentList) {
-        map[c.id] = await checkHasHeart('comment', c.id, userId);
-      }
+      commentList.forEach((c, i) => {
+        map[c.id] = heartResults[i] ?? false;
+      });
       setCommentHeartMap(map);
     } finally {
       setLoading(false);

@@ -12,7 +12,11 @@ const DEEPLINK_BASE = 'intoss://bamboo-app';
 
 /** userId(deviceId)로 tossUserKey 조회 */
 async function getTossUserKey(userId: string): Promise<string | null> {
-  const doc = await admin.firestore().collection(USER_KEYS_COL).doc(userId).get();
+  const doc = await admin
+    .firestore()
+    .collection(USER_KEYS_COL)
+    .doc(userId)
+    .get();
   const data = doc.data();
   return (data?.tossUserKey as string) || null;
 }
@@ -57,7 +61,8 @@ export async function trySendPush(payload: PushPayload): Promise<void> {
     return;
   }
 
-  const templateSetCode = type === 'comment' ? TEMPLATE_COMMENT : TEMPLATE_HEART;
+  const templateSetCode =
+    type === 'comment' ? TEMPLATE_COMMENT : TEMPLATE_HEART;
   const landingUrl = `${DEEPLINK_BASE}/post/${postId}`;
 
   const result = await sendAppsInTossMessage(tossUserKey, {

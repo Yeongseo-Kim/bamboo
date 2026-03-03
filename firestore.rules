@@ -18,7 +18,7 @@ service cloud.firestore {
                    && request.resource.data.reportCount == 0
                    && request.resource.data.isHidden == false;
       // 신고 시 reportCount, isHidden만 업데이트 허용
-      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reportCount', 'isHidden']);
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reportCount', 'isHidden', 'heartCount']);
       allow delete: if true;
     }
 
@@ -31,7 +31,7 @@ service cloud.firestore {
                    && request.resource.data.userId is string
                    && request.resource.data.reportCount == 0
                    && request.resource.data.isHidden == false;
-      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reportCount', 'isHidden']);
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['reportCount', 'isHidden', 'heartCount']);
       allow delete: if true;
     }
 

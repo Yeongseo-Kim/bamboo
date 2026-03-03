@@ -104,13 +104,17 @@ export const onHeartCreated = functions.firestore
  * 2. mTLS 인증서 발급 후 certs/ 폴더에 배치
  */
 export const registerUserKeyFromAuthCode = functions.https.onCall(
-  async (data: { authorizationCode: string; referrer: string; userId: string }) => {
+  async (data: {
+    authorizationCode: string;
+    referrer: string;
+    userId: string;
+  }) => {
     const { mtlsFetch } = await import('./appsInTossClient');
     const { authorizationCode, referrer, userId } = data;
     if (!authorizationCode || !userId) {
       throw new functions.https.HttpsError(
         'invalid-argument',
-        'authorizationCode, userId 필수'
+        'authorizationCode, userId 필수',
       );
     }
 
@@ -123,7 +127,7 @@ export const registerUserKeyFromAuthCode = functions.https.onCall(
           authorizationCode,
           referrer: referrer || 'DEFAULT',
         }),
-      }
+      },
     );
 
     const tokenData = tokenRes.data as {
@@ -135,7 +139,7 @@ export const registerUserKeyFromAuthCode = functions.https.onCall(
     if (tokenData.resultType !== 'SUCCESS' || !tokenData.success?.accessToken) {
       throw new functions.https.HttpsError(
         'internal',
-        tokenData.error?.reason || '토큰 발급 실패'
+        tokenData.error?.reason || '토큰 발급 실패',
       );
     }
 
@@ -147,7 +151,7 @@ export const registerUserKeyFromAuthCode = functions.https.onCall(
       {
         method: 'GET',
         headers: { Authorization: `Bearer ${accessToken}` },
-      }
+      },
     );
 
     const meData = meRes.data as {
@@ -159,7 +163,7 @@ export const registerUserKeyFromAuthCode = functions.https.onCall(
     if (meData.resultType !== 'SUCCESS' || meData.success?.userKey == null) {
       throw new functions.https.HttpsError(
         'internal',
-        meData.error?.reason || '사용자 정보 조회 실패'
+        meData.error?.reason || '사용자 정보 조회 실패',
       );
     }
 
@@ -171,9 +175,9 @@ export const registerUserKeyFromAuthCode = functions.https.onCall(
         tossUserKey,
         updatedAt: admin.firestore.FieldValue.serverTimestamp(),
       },
-      { merge: true }
+      { merge: true },
     );
 
     return { success: true };
-  }
+  },
 );

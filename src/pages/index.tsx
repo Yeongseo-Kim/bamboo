@@ -1,10 +1,5 @@
 import { createRoute } from '@granite-js/react-native';
-import {
-  Button,
-  ListFooter,
-  Toast,
-  Txt,
-} from '@toss/tds-react-native';
+import { Button, ListFooter, Toast, Txt } from '@toss/tds-react-native';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { FlatList, RefreshControl, StyleSheet, View } from 'react-native';
 import { getUserId } from '../api/client';
@@ -12,6 +7,7 @@ import { hasHeart, toggleHeart } from '../api/hearts';
 import { fetchPosts } from '../api/posts';
 import type { Post } from '../api/types';
 import { PostCard } from '../components/PostCard';
+import { SkeletonPostCard } from '../components/SkeletonPostCard';
 import { PAGE_SIZE, ROUTES } from '../constants';
 import { useToast } from '../hooks/useToast';
 import { theme } from '../theme';
@@ -26,6 +22,7 @@ function Page() {
   const { toast, showToast, closeToast } = useToast();
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [heartMap, setHeartMap] = useState<Record<string, boolean>>({});
@@ -40,14 +37,18 @@ function Page() {
         const items = await fetchPosts(lastId);
         if (items.length < PAGE_SIZE) setHasMore(false);
         setPosts((prev) => (lastId ? [...prev, ...items] : items));
+        const heartResults = await Promise.all(
+          items.map((p) => hasHeart('post', p.id, userId)),
+        );
         const map: Record<string, boolean> = {};
-        for (const p of items) {
-          map[p.id] = await hasHeart('post', p.id, userId);
-        }
+        items.forEach((p, i) => {
+          map[p.id] = heartResults[i] ?? false;
+        });
         setHeartMap((prev) => ({ ...prev, ...map }));
       } finally {
         loadingRef.current = false;
         setLoading(false);
+        setInitialLoading(false);
       }
     },
     [userId],
@@ -56,6 +57,17 @@ function Page() {
   useEffect(() => {
     loadPosts();
   }, [loadPosts]);
+
+  // 글쓰기 화면에서 돌아올 때 피드 자동 새로고침
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      if (!initialLoading) {
+        setHasMore(true);
+        loadPosts();
+      }
+    });
+    return unsubscribe;
+  }, [navigation, loadPosts, initialLoading]);
 
   const handleHeartPress = useCallback(
     async (post: Post) => {
@@ -97,16 +109,31 @@ function Page() {
     try {
       const items = await fetchPosts();
       setPosts(items);
+      const heartResults = await Promise.all(
+        items.map((p) => hasHeart('post', p.id, userId)),
+      );
       const map: Record<string, boolean> = {};
-      for (const p of items) {
-        map[p.id] = await hasHeart('post', p.id, userId);
-      }
+      items.forEach((p, i) => {
+        map[p.id] = heartResults[i] ?? false;
+      });
       setHeartMap(map);
       if (items.length < PAGE_SIZE) setHasMore(false);
     } finally {
       setRefreshing(false);
     }
   }, [userId, refreshing]);
+
+  if (initialLoading) {
+    return (
+      <View style={[styles.container, { backgroundColor: theme.background }]}>
+        <View style={[styles.listContent, { paddingTop: 12 }]}>
+          {[...Array(5)].map((_, i) => (
+            <SkeletonPostCard key={i} />
+          ))}
+        </View>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: theme.background }]}>
@@ -184,6 +211,11 @@ function Page() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  center: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   ctaWrapper: {
     position: 'absolute',

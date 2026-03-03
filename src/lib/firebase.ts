@@ -23,4 +23,3 @@ const app = existingApps[0] ?? initializeApp(firebaseConfig);
 export const db = getFirestore(app);
 export const functions = getFunctions(app);
 export { httpsCallable };
-

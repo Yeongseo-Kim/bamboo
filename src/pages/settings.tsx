@@ -1,14 +1,14 @@
 import { createRoute } from '@granite-js/react-native';
-import { List, ListRow, Switch, Txt, Toast } from '@toss/tds-react-native';
+import { List, ListRow, Switch, Toast, Txt } from '@toss/tds-react-native';
 import React, { useCallback, useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { getUserId } from '../api/client';
-import { useToast } from '../hooks/useToast';
 import {
   getNotificationPrefs,
   setNotificationPrefs,
 } from '../api/notifications';
 import { registerUserKeyForPush } from '../api/registerUserKey';
+import { useToast } from '../hooks/useToast';
 import { theme } from '../theme';
 
 export const Route = createRoute('/settings', {

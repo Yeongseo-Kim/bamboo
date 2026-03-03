@@ -51,7 +51,7 @@ function getMtlsOptions(): { cert: string; key: string } | null {
  */
 export async function sendAppsInTossMessage(
   tossUserKey: string,
-  params: SendMessageParams
+  params: SendMessageParams,
 ): Promise<SendMessageResult> {
   const mtls = getMtlsOptions();
   if (!mtls) {
@@ -98,7 +98,7 @@ export async function sendAppsInTossMessage(
             });
           }
         });
-      }
+      },
     );
 
     req.on('error', (err) => {
@@ -122,7 +122,7 @@ export async function mtlsFetch(
     method?: 'GET' | 'POST';
     body?: string;
     headers?: Record<string, string>;
-  } = {}
+  } = {},
 ): Promise<{ status: number; data: unknown }> {
   const mtls = getMtlsOptions();
   if (!mtls) {
@@ -161,7 +161,7 @@ export async function mtlsFetch(
             resolve({ status: res.statusCode || 0, data });
           }
         });
-      }
+      },
     );
 
     req.on('error', reject);
