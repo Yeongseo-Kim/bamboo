@@ -33,7 +33,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.registerUserKeyFromAuthCode = exports.onHeartCreated = exports.onCommentCreated = void 0;
+exports.registerUserKeyFromAuthCode = exports.onPostCreated = exports.onHeartCreated = exports.onCommentCreated = void 0;
 /**
  * Firebase Cloud Functions - 토스 대나무숲
  * 댓글/공감 시 앱인토스 스마트 발송 푸시 API 호출
@@ -121,6 +121,31 @@ exports.onHeartCreated = functions.firestore
         postId,
         type: 'heart',
     });
+});
+/**
+ * 새 글 작성 시 → 전체 등록 사용자에게 푸시 발송
+ */
+exports.onPostCreated = functions.firestore
+    .document('posts/{postId}')
+    .onCreate(async (snap, ctx) => {
+    const post = snap.data();
+    const postId = ctx.params.postId;
+    const authorId = post.userId;
+    // tossUserKey가 등록된 전체 사용자 조회
+    const userKeysSnap = await db.collection('user_keys').get();
+    const pushPromises = [];
+    for (const doc of userKeysSnap.docs) {
+        const userId = doc.id;
+        // 본인 제외
+        if (userId === authorId)
+            continue;
+        pushPromises.push((0, sendPush_1.trySendPush)({
+            recipientUserId: userId,
+            postId,
+            type: 'new_post',
+        }));
+    }
+    await Promise.all(pushPromises);
 });
 /**
  * 토스 로그인 인가코드로 userKey 등록 (앱에서 호출)

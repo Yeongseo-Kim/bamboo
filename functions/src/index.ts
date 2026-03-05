@@ -95,6 +95,37 @@ export const onHeartCreated = functions.firestore
   });
 
 /**
+ * 새 글 작성 시 → 전체 등록 사용자에게 푸시 발송
+ */
+export const onPostCreated = functions.firestore
+  .document('posts/{postId}')
+  .onCreate(async (snap, ctx) => {
+    const post = snap.data();
+    const postId = ctx.params.postId;
+    const authorId = post.userId as string;
+
+    // tossUserKey가 등록된 전체 사용자 조회
+    const userKeysSnap = await db.collection('user_keys').get();
+
+    const pushPromises: Promise<void>[] = [];
+    for (const doc of userKeysSnap.docs) {
+      const userId = doc.id;
+      // 본인 제외
+      if (userId === authorId) continue;
+
+      pushPromises.push(
+        trySendPush({
+          recipientUserId: userId,
+          postId,
+          type: 'new_post',
+        }),
+      );
+    }
+
+    await Promise.all(pushPromises);
+  });
+
+/**
  * 토스 로그인 인가코드로 userKey 등록 (앱에서 호출)
  * - appLogin() → authorizationCode + referrer 전달
  * - 서버에서 토큰 교환 → login-me → userKey 저장

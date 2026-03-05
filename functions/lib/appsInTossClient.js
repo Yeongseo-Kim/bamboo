@@ -47,10 +47,12 @@ const HOST = 'apps-in-toss-api.toss.im';
  * mTLS 옵션 생성 (certs 경로는 환경변수 또는 기본값)
  */
 function getMtlsOptions() {
+    // functions/certs/ 에 인증서 배치 (배포 시 함께 업로드)
+    // 또는 APPSINTOSS_MTLS_CERT_PATH, APPSINTOSS_MTLS_KEY_PATH 환경변수 지정
     const certPath = process.env.APPSINTOSS_MTLS_CERT_PATH ||
-        path.join(__dirname, '../../certs/bamboo-app.crt');
+        path.join(__dirname, '../certs/bamboo-app.crt');
     const keyPath = process.env.APPSINTOSS_MTLS_KEY_PATH ||
-        path.join(__dirname, '../../certs/bamboo-app.key');
+        path.join(__dirname, '../certs/bamboo-app.key');
     try {
         const cert = fs.readFileSync(certPath, 'utf8');
         const key = fs.readFileSync(keyPath, 'utf8');

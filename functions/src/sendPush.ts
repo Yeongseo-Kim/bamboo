@@ -6,8 +6,9 @@ import { sendAppsInTossMessage } from './appsInTossClient';
 
 const USER_KEYS_COL = 'user_keys';
 const NOTIFICATION_PREFS_COL = 'notification_prefs';
-const TEMPLATE_COMMENT = 'bamboo-app-bamboo_comment_notification';
-const TEMPLATE_HEART = 'bamboo-app-bamboo_heart_notification';
+const TEMPLATE_COMMENT = 'bamboo-app-comment';
+const TEMPLATE_HEART = 'bamboo-app-heart';
+const TEMPLATE_NEW_POST = 'bamboo-app-new_post';
 const DEEPLINK_BASE = 'intoss://bamboo-app';
 
 /** userId(deviceId)로 tossUserKey 조회 */
@@ -35,7 +36,7 @@ async function isPushEnabled(userId: string): Promise<boolean> {
 export interface PushPayload {
   recipientUserId: string;
   postId: string;
-  type: 'comment' | 'heart';
+  type: 'comment' | 'heart' | 'new_post';
 }
 
 /**
@@ -62,7 +63,11 @@ export async function trySendPush(payload: PushPayload): Promise<void> {
   }
 
   const templateSetCode =
-    type === 'comment' ? TEMPLATE_COMMENT : TEMPLATE_HEART;
+    type === 'comment'
+      ? TEMPLATE_COMMENT
+      : type === 'heart'
+        ? TEMPLATE_HEART
+        : TEMPLATE_NEW_POST;
   const landingUrl = `${DEEPLINK_BASE}/post/${postId}`;
 
   const result = await sendAppsInTossMessage(tossUserKey, {

@@ -43,7 +43,8 @@ export interface Notification {
   | 'comment_on_post'
   | 'comment_on_participated'
   | 'like_post'
-  | 'like_comment';
+  | 'like_comment'
+  | 'new_post';
   targetId: string; // post id or comment id
   postId: string; // 이동할 게시글 ID (편의상 추가)
   fromUserId: string; // 발신자

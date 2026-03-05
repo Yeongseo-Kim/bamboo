@@ -41,12 +41,17 @@ const admin = __importStar(require("firebase-admin"));
 const appsInTossClient_1 = require("./appsInTossClient");
 const USER_KEYS_COL = 'user_keys';
 const NOTIFICATION_PREFS_COL = 'notification_prefs';
-const TEMPLATE_COMMENT = 'bamboo-app-bamboo_comment_notification';
-const TEMPLATE_HEART = 'bamboo-app-bamboo_heart_notification';
+const TEMPLATE_COMMENT = 'bamboo-app-comment';
+const TEMPLATE_HEART = 'bamboo-app-heart';
+const TEMPLATE_NEW_POST = 'bamboo-app-new_post';
 const DEEPLINK_BASE = 'intoss://bamboo-app';
 /** userId(deviceId)로 tossUserKey 조회 */
 async function getTossUserKey(userId) {
-    const doc = await admin.firestore().collection(USER_KEYS_COL).doc(userId).get();
+    const doc = await admin
+        .firestore()
+        .collection(USER_KEYS_COL)
+        .doc(userId)
+        .get();
     const data = doc.data();
     return (data === null || data === void 0 ? void 0 : data.tossUserKey) || null;
 }
@@ -80,7 +85,11 @@ async function trySendPush(payload) {
     if (!pushEnabled) {
         return;
     }
-    const templateSetCode = type === 'comment' ? TEMPLATE_COMMENT : TEMPLATE_HEART;
+    const templateSetCode = type === 'comment'
+        ? TEMPLATE_COMMENT
+        : type === 'heart'
+            ? TEMPLATE_HEART
+            : TEMPLATE_NEW_POST;
     const landingUrl = `${DEEPLINK_BASE}/post/${postId}`;
     const result = await (0, appsInTossClient_1.sendAppsInTossMessage)(tossUserKey, {
         templateSetCode,

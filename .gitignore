@@ -20,3 +20,4 @@ certs/
 *.pem
 .swc
 .DS_Store
+firebase-debug.log

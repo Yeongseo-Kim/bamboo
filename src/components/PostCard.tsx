@@ -1,5 +1,5 @@
-import { ListRow, Txt } from '@toss/tds-react-native';
 import { Path, Svg } from '@granite-js/native/react-native-svg';
+import { ListRow, Txt } from '@toss/tds-react-native';
 import { formatDistanceToNow } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import React from 'react';
