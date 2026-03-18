@@ -27,6 +27,8 @@ function Page() {
   const [hasMore, setHasMore] = useState(true);
   const [heartMap, setHeartMap] = useState<Record<string, boolean>>({});
   const loadingRef = useRef(false);
+  const initialLoadingRef = useRef(initialLoading);
+  initialLoadingRef.current = initialLoading;
 
   const loadPosts = useCallback(
     async (lastId?: string) => {
@@ -54,20 +56,24 @@ function Page() {
     [userId],
   );
 
+  // loadPosts를 ref에 보관 → focus 리스너가 매 렌더 재등록되지 않도록 (렌더 루프 방지)
+  const loadPostsRef = useRef(loadPosts);
+  loadPostsRef.current = loadPosts;
+
   useEffect(() => {
     loadPosts();
   }, [loadPosts]);
 
-  // 글쓰기 화면에서 돌아올 때 피드 자동 새로고침
+  // 글쓰기 화면에서 돌아올 때 피드 자동 새로고침 (loadPostsRef로 의존성 최소화)
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
-      if (!initialLoading) {
+      if (!initialLoadingRef.current) {
         setHasMore(true);
-        loadPosts();
+        loadPostsRef.current();
       }
     });
     return unsubscribe;
-  }, [navigation, loadPosts, initialLoading]);
+  }, [navigation]);
 
   const handleHeartPress = useCallback(
     async (post: Post) => {

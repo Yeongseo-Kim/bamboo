@@ -492,17 +492,17 @@ export async function getNotifications(
   );
   const snap = await getDocs(q);
   return snap.docs.map((d) => {
-    const data = d.data();
+    const data = d.data() as Record<string, unknown>;
     return {
       id: d.id,
-      userId: data.userId,
-      type: data.type,
-      targetId: data.targetId,
-      postId: data.postId,
-      fromUserId: data.fromUserId,
-      message: data.message,
-      isRead: data.isRead,
-      createdAt: data.createdAt,
+      userId: data.userId as string,
+      type: data.type as Notification['type'],
+      targetId: data.targetId as string,
+      postId: data.postId as string,
+      fromUserId: data.fromUserId as string,
+      message: data.message as string,
+      isRead: (data.isRead as boolean) ?? false,
+      createdAt: toMillis(data.createdAt),
     };
   });
 }

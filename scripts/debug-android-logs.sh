@@ -20,5 +20,7 @@ fi
 
 echo "[debug:android:logs] device: $DEVICE_ID"
 echo "[debug:android:logs] 로그 초기화 후 실시간 수집을 시작합니다. (종료: Ctrl+C)"
+echo "[debug:android:logs] (RedBox/Metro 에러도 이 터미널에 실시간 출력됩니다)"
 "$ADB_BIN" -s "$DEVICE_ID" logcat -c || true
-"$ADB_BIN" -s "$DEVICE_ID" logcat '*:S' ReactNative:V ReactNativeJS:V AndroidRuntime:E
+# RedBox·Metro 500 에러는 unknown, ReactHost, BridgelessReact 태그로도 출력됨
+"$ADB_BIN" -s "$DEVICE_ID" logcat '*:S' ReactNative:V ReactNativeJS:V AndroidRuntime:E ReactHost:E BridgelessReact:W unknown:W

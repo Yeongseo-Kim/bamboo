@@ -1,8 +1,7 @@
 import { Path, Svg } from '@granite-js/native/react-native-svg';
 import { ListRow, Txt } from '@toss/tds-react-native';
-import { formatDistanceToNow } from 'date-fns';
-import { ko } from 'date-fns/locale';
 import React from 'react';
+import { formatTimeAgo } from '../lib/formatTimeAgo';
 import { StyleSheet, View } from 'react-native';
 import type { Post } from '../api/types';
 import { theme } from '../theme';
@@ -24,10 +23,7 @@ export function PostCard({
   hasHeart,
 }: PostCardProps) {
   const isOwner = post.userId === currentUserId;
-  const timeAgo = formatDistanceToNow(post.createdAt, {
-    addSuffix: true,
-    locale: ko,
-  });
+  const timeAgo = formatTimeAgo(post.createdAt);
 
   return (
     <ListRow

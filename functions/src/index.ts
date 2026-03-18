@@ -15,7 +15,7 @@ const db = admin.firestore();
  */
 export const onCommentCreated = functions.firestore
   .document('comments/{commentId}')
-  .onCreate(async (snap, ctx) => {
+  .onCreate(async (snap, _ctx) => {
     const comment = snap.data();
     const { postId, userId: commenterId } = comment;
 
@@ -60,7 +60,7 @@ export const onCommentCreated = functions.firestore
  */
 export const onHeartCreated = functions.firestore
   .document('hearts/{heartId}')
-  .onCreate(async (snap, ctx) => {
+  .onCreate(async (snap, _ctx) => {
     const heart = snap.data();
     const { targetType, targetId, userId: likerId } = heart;
 

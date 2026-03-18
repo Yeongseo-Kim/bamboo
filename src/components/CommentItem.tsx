@@ -1,7 +1,6 @@
 import { ListRow, TextButton, Txt } from '@toss/tds-react-native';
-import { formatDistanceToNow } from 'date-fns';
-import { ko } from 'date-fns/locale';
 import React from 'react';
+import { formatTimeAgo } from '../lib/formatTimeAgo';
 import { StyleSheet, View } from 'react-native';
 import type { Comment } from '../api/types';
 import { theme } from '../theme';
@@ -26,10 +25,7 @@ export function CommentItem({
   onHeartPress,
   hasHeart,
 }: CommentItemProps) {
-  const timeAgo = formatDistanceToNow(comment.createdAt, {
-    addSuffix: true,
-    locale: ko,
-  });
+  const timeAgo = formatTimeAgo(comment.createdAt);
 
   return (
     <ListRow

@@ -24,3 +24,4 @@ alwaysApply: true
 - 변경 직후 Metro 로그에서 `Maximum update depth exceeded` 발생 여부 확인
 - `adb reverse --list`와 Metro 단일 프로세스(8081 하나) 확인
 - 리로드 전 앱이 실제로 연결된 상태인지 확인 (`No apps connected` 방지)
+- 캐시 꼬임 의심 시: `npm run dev:reset` (규칙: metro-android-connect)
